@@ -1,0 +1,34 @@
+from PIL import Image
+import numpy as np
+
+# Edit these:
+INPUT = "input.png"
+OUTPUT = "output_3colors.png"
+
+# Thresholds (0-255). Adjust after a test run.
+# Pixels darker than t1 -> class 2 (outer cut / strongest)
+# Between t1 and t2 -> class 1 (mid)
+# Above t2 -> class 0 (background / lowest)
+t1 = 85
+t2 = 170
+
+# Colors (RGB) for the three classes (background, mid, outer)
+COLORS = {
+    0: (255, 255, 255),  # background (white)
+    1: (0, 255, 0),      # low emboss (green)
+    2: (255, 0, 0),      # cut-through (red)
+}
+
+img = Image.open(INPUT).convert("L")  # grayscale
+arr = np.array(img)
+
+cls = np.zeros_like(arr, dtype=np.uint8)
+cls[arr < t2] = 1
+cls[arr < t1] = 2
+
+out = np.zeros((arr.shape[0], arr.shape[1], 3), dtype=np.uint8)
+for k, rgb in COLORS.items():
+    out[cls == k] = rgb
+
+Image.fromarray(out, mode="RGB").save(OUTPUT)
+print("Wrote", OUTPUT)
